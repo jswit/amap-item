@@ -1,12 +1,14 @@
 {
   "name": "bs-amap",
-  "version": "0.1.0",
+  "version": "0.0.1",
   "private": true,
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build"
   },
   "dependencies": {
+    "@xinguang-data/bs-com-amap": "0.0.3",
+    "axios": "^0.18.0",
     "vue": "^2.5.17"
   },
   "devDependencies": {
