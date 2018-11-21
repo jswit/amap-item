@@ -1,29 +1,27 @@
 # bs-amap
 
-## Project setup
+## Usage
 ```
-npm install
-```
-
-### Compiles and hot-reloads for development
-```
-npm run serve
+npm install @xinguang-data/bs-amap
 ```
 
-### Compiles and minifies for production
 ```
-npm run build
-```
-
-### Run your tests
-```
-npm run test
+import bsAmap from '@xinguang-data/bs-amap'
+import vue from 'vue'
+vue.use( bsAmap );
 ```
 
-### Lints and fixes files
 ```
-npm run lint
-```
+<bs-amap
+    :region_id=""
+    :mapConfig=""
+    :polygons=""
+    :basePolygons=""
+    :polygonStyle=""
+    :polygonDyeing=""
+    :pointData=""
+    :satelliteIsShow=""
+>
 
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
+</bs-amap>
+```

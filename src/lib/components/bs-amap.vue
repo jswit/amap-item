@@ -17,6 +17,7 @@
             @zoomend="mapZoomend"
             @zoomchange="mapZoomchange"
         >
+            <!-- 多边形 -->
             <amap-polygon
                 v-if="polygonDatas"
                 v-for="(polygon, index) of polygonDatas" 
@@ -24,15 +25,15 @@
                 :path="polygon.coordinates"
                 :ref="`polygon_${polygon.region_id}`"
                 :extData="polygon"
-                :fillColor="polygonStyles.normal.fillColor"
-                :fillOpacity="polygonStyles.normal.fillOpacity"
-                :strokeColor="polygonStyles.normal.strokeColor"
-                :strokeOpacity="polygonStyles.normal.strokeOpacity"
-                :strokeWeight="polygonStyles.normal.strokeWeight"
-                :strokeStyle="polygonStyles.normal.strokeStyle"
-                :draggable="polygonStyles.normal.draggable"
-                :bubble="polygonStyles.normal.bubble"
-                :zIndex="polygonStyles.normal.zIndex"
+                :fillColor="polygonDyeingArr.hasOwnProperty(index) && typeof polygonDyeingArr[index].fillColor != `undefined` ? polygonDyeingArr[index].fillColor : polygonNormal.fillColor"
+                :fillOpacity="polygonDyeingArr.hasOwnProperty(index) && typeof polygonDyeingArr[index].fillOpacity != `undefined` ? polygonDyeingArr[index].fillOpacity : polygonNormal.fillOpacity"
+                :strokeColor="polygonDyeingArr.hasOwnProperty(index) && typeof polygonDyeingArr[index].strokeColor != `undefined` ? polygonDyeingArr[index].strokeColor : polygonNormal.strokeColor"
+                :strokeOpacity="polygonDyeingArr.hasOwnProperty(index) && typeof polygonDyeingArr[index].strokeOpacity != `undefined` ? polygonDyeingArr[index].strokeOpacity : polygonNormal.strokeOpacity"
+                :strokeWeight="polygonDyeingArr.hasOwnProperty(index) && typeof polygonDyeingArr[index].strokeWeight != `undefined` ? polygonDyeingArr[index].strokeWeight : polygonNormal.strokeWeight"
+                :strokeStyle="polygonDyeingArr.hasOwnProperty(index) && typeof polygonDyeingArr[index].strokeStyle != `undefined` ? polygonDyeingArr[index].strokeStyle : polygonNormal.strokeStyle"
+                :draggable="polygonDyeingArr.hasOwnProperty(index) && typeof polygonDyeingArr[index].draggable != `undefined` ? polygonDyeingArr[index].draggable : polygonNormal.draggable"
+                :bubble="polygonDyeingArr.hasOwnProperty(index) && typeof polygonDyeingArr[index].bubble != `undefined` ? polygonDyeingArr[index].bubble : polygonNormal.bubble"
+                :zIndex="polygonDyeingArr.hasOwnProperty(index) && typeof polygonDyeingArr[index].zIndex != `undefined` ? polygonDyeingArr[index].zIndex : polygonNormal.zIndex"
                 
                 @click="polygonClick"
                 @mouseover="polygonMouseover"
@@ -40,17 +41,66 @@
                                 
             >
             </amap-polygon>
-
+            
+            <!-- 纯文本标记 -->
             <amap-text
                 v-if="polygonDatas"
                 v-for="(polygon, index) in polygonDatas" 
                 :key="`text_${polygon.region_id}${index}`"
+                :ref="`text_${polygon.region_id}`"
+
                 :text="polygon.name"
-                @click="textClick"
                 :position="polygon.center_point"
                 :extData="polygon"
+                
+                :topWhenClick="textStyles.topWhenClick"
+                :bubble="textStyles.bubble"
+                :autoRotation="textStyles.autoRotation"
+                :textAlign="textStyles.textAlign"
+                :verticalAlign="textStyles.verticalAlign"
+                :offset="textStyles.offset"
+                :draggable="textStyles.draggable"
+                :raiseOnDrag="textStyles.raiseOnDrag"
+                :cursor="textStyles.cursor"
+                :visible="textStyles.visible"
+                :zIndex="textStyles.zIndex"
+                :angle="textStyles.angle"
+                :animation="textStyles.animation"
+                :shadow="textStyles.shadow"
+                :title="textStyles.title"
+                :clickable="textStyles.clickable"
+                :textStyle="textStyles.textStyle"
+
+                @click="textClick"
+                @dblclick="textDblclick"
+                @mouseover="textMouseover"
+                @mouseout="textMouseout"
+                @rightclick="textRightclick"
+                @mousedown="textmousedown"
+                @mouseup="textMouseup"
+                @touchstart="textTouchstart"
+                @touchmove="textTouchmove"
+                @touchend="textTouchend"
+
             >
             </amap-text>
+
+            <!-- 海量点 -->
+            <amap-pointsimplifier
+                :pointData="pointDatas"
+                @pointClick="pointClick"
+                @pointMouseover="pointMouseover"
+            >
+            </amap-pointsimplifier>
+
+            <!-- 卫星图层 -->
+            <amap-satellite
+                :isShow="satelliteIsShow"
+            >
+            </amap-satellite>
+
+
+            <slot></slot>
         </amap>
     </div>
 </template>
@@ -62,16 +112,26 @@ export default {
         return {
             mapObj : null,
             config : {},
-            polygonDatas : Array,
-            polygonStyles : null,
-            childPolygonDatas : null,
-            chooseRegion : null,
 
-            mapHierarchyData : {},
+            // 多边形
+            polygonDatas : [],      // 多边形数据
+            polygonDyeingArr : [],  // 地图多边形染色数据
+            childPolygonDatas : null,
+
+            // 纯文本标记
+            textStyles : [],        // 纯文本标签样式
             
+            chooseRegion : null,
+            mapHierarchyData : {},  // 地图zoom层级对应数据，用于上钻操作
             lastZoom : Number,
             currZoom : Number,
             drillRegion : "",
+
+            // 海量点数据
+            pointDatas : [],
+
+            // 卫星图层是否显示
+            // satelliteIsShow : false,    
         }
     },
     props:{
@@ -101,12 +161,64 @@ export default {
                 return [];
             }
         },
-        polygonStyle: {
+
+        polygonNormal :{
+            type : Object,
+            required: false,
+            default: () => {
+                return {};
+            } 
+        },
+        polygonDefault :{
+            type : Object,
+            required: false,
+            default: () => {
+                return {};
+            } 
+        },
+        polygonHighlight :{
+            type : Object,
+            required: false,
+            default: () => {
+                return {};
+            } 
+        },
+        polygonHover :{
+            type : Object,
+            required: false,
+            default: () => {
+                return {};
+            } 
+        },
+
+        polygonDyeing: {
+            type : Array,
+            required: false,
+            default: () => {
+                return [];
+            }
+        },
+
+        textStyle : {
             type : Object,
             required: false,
             default: () => {
                 return {};
             }
+        },
+        
+        pointData: {
+            type : Array,
+            required: false,
+            default: () => {
+                return [];
+            }
+        },
+        
+        satelliteIsShow: {
+            type : Boolean,
+            required: false,
+            default: false
         },
     },
     created(){
@@ -116,14 +228,23 @@ export default {
         let self = this;
         // step 1 注册鼠标滚动
         this.windowAddMouseWheel();
+
         // step 2 赋值多边形数据给地图组件
         this.polygonDatas = this.polygons;
+
         // step 3 赋值多边形样式
         this.polygonStyles = this.polygonStyle;
 
+        // step 4 赋值多边形染色数据
+        this.polygonDyeingArr = this.polygonDyeing;
+
+        this.textStyles = this.textStyle;
+
+        // step 4 判断是否已经实例化地图，并赋值对应层级数据给变量
         if(this.polygons && this.mapObj){
             self.assignMapHierarchy(this.polygons);
         }
+
     },
 
     watch:{
@@ -152,6 +273,14 @@ export default {
             },
 
             deep: true
+        },
+
+        pointData(){
+            this.pointDatas = this.pointData;
+        },
+
+        mapObj () {
+
         }
     },
     beforeUpdate(){
@@ -215,26 +344,107 @@ export default {
             if(typeof self.mapHierarchyData[self.config.zoom] == 'undefined'){
                 self.assignMapHierarchy(self.basePolygons, self.config.zoom);
             }
-
-            // if(self.mapHierarchyData[self.zoom] )
         },
         polygonMouseover( component ) {
-            /* let self = this;
+            let self = this;
+            self.$emit('polygonMouseover', component);
+            
             let polygon = component.polygon;
-            self.setPolygonStyle(polygon, "hover"); */
+            self.setPolygonStyle( polygon, self.polygonHover );
                         
         },
         polygonMouseout( component ) {
-            /* let self = this;
+            let self = this;
+            self.$emit('polygonMouseout', component);
+            
             let polygon = component.polygon;
-            self.setPolygonStyle(polygon, "normal"); */
+            self.setPolygonStyle( polygon, self.polygonDefault );
         },
 
         /**
          * 纯文本标签点击事件
          */
         textClick ( component ) {
+            let self = this;
+            // step 1 提交自定义事件给父组件
+            self.$emit('textClick', component);
+            let textMarker = component.textMarker;
+            let extData = textMarker.getExtData();
+
+            let polygonComponent = self.$refs['polygon_'+extData.region_id][0];
+            let polygon = polygonComponent.polygon;
+            self.setPolygonStyle(polygon, self.polygonHighlight );
+
+            let allPolygon = self.mapObj.getAllOverlays('polygon')
+            allPolygon.forEach( function( item, key ) {
+                if( item != polygon){
+                    if( self.polygonDyeingArr.hasOwnProperty( key ) && typeof self.polygonDyeingArr[ key ]){
+                        self.setPolygonStyle(item, self.polygonDyeingArr[ key ]);
+                    }else{
+                        self.setPolygonStyle(item, self.polygonNormal);
+                    }
+                }
+            })
+
+
+        },
+        textDblclick ( component ) {
+            let self = this;
+            // step 1 提交自定义事件给父组件
+            self.$emit('textDblclick', component);
+        },
+        textMouseover ( component ) {
+            let self = this;
+            // step 1 提交自定义事件给父组件
+            self.$emit('textMouseover', component);
+        },
+        textMouseout ( component ) {
+            let self = this;
+            // step 1 提交自定义事件给父组件
+            self.$emit('textMouseout', component);
+        },
+        textRightclick ( component ) {
+            let self = this;
+            // step 1 提交自定义事件给父组件
+            self.$emit('textRightclick', component);
+        },
+        textmousedown ( component ) {
+            let self = this;
+            // step 1 提交自定义事件给父组件
+            self.$emit('textmousedown', component);
+        },
+        textMouseup ( component ) {
+            let self = this;
+            // step 1 提交自定义事件给父组件
+            self.$emit('textMouseup', component);
+        },
+        textTouchstart ( component ) {
+            let self = this;
+            // step 1 提交自定义事件给父组件
+            self.$emit('textTouchstart', component);
+        },
+        textTouchmove ( component ) {
+            let self = this;
+            // step 1 提交自定义事件给父组件
+            self.$emit('textTouchmove', component);
+        },
+        textTouchend ( component ) {
+            let self = this;
+            // step 1 提交自定义事件给父组件
+            self.$emit('textTouchend', component);
+        },
+
+
+        /**
+         * 海量点点击事件
+         */
+        pointClick( value ) {
+            let self = this;
+            self.$emit('pointClick', value);
             
+        },
+        pointMouseover( value ) {
+
         },
 
         /**
@@ -243,13 +453,18 @@ export default {
          * @param type String 需要设置的颜色类型
          * @param options Object 自定义options
          */
-        setPolygonStyle(polygon, type="", options={}){
+        setPolygonStyle(polygon, options={}){
             let self = this;
-            if(typeof self.polygonStyle[type] === 'undefined') return;
-            polygon.setOptions(self.polygonStyle[type]);
+            if( Object.keys( options ).length > 0 )
+            {
+                polygon.setOptions( options );
+                return false;
+            }
+            /* if(typeof self.polygonStyle[type] === 'undefined') return;
+            polygon.setOptions(self.polygonStyle[type]); */
         },
 
-                /**
+        /**
          * windows鼠标滚轮事件
          */
         windowAddMouseWheel() {
@@ -329,7 +544,10 @@ export default {
             if( zoom == self.config.zoom ) {
                 let allPolygon = self.mapObj.getAllOverlays('polygon');
                 let allText = self.mapObj.getAllOverlays('text');
-
+                
+                if( typeof self.mapHierarchyData[zoom] == 'undefined'){
+                    return
+                }
                 self.mapHierarchyData[zoom].forEach( function ( item, key ) {
                     if( !self.basePolygons.includes( item )) {
                         allPolygon.forEach( function( polygon, n ) {
@@ -343,37 +561,7 @@ export default {
                 self.mapHierarchyData[zoom] = self.basePolygons;
                 self.polygonDatas = self.mapHierarchyData[zoom];
             }
-
-
-
-
-            /* self.polygonDatas = self.mapHierarchyData[zoom]
-
-            console.log(self.mapHierarchyData);
-            for( let key in self.mapHierarchyData ){
-                // step 1 判断当前 存储的地图数据的key 是否大于当前zoom，如果大于则移除所有相对应的数据和多边形覆盖物
-                if(key > zoom){
-                    self.mapHierarchyData[key].forEach( function( item, m){
-                        if( !self.basePolygons.includes(item) ){
-
-                            allPolygon.forEach( function( polygon, n) {
-                                if(polygon.getExtData().region_id == item.region_id){
-                                    self.mapObj.remove(polygon);
-                                    self.mapObj.remove(allText[n]);
-                                }
-                            })
-
-                        }
-                    } );
-                    self.mapHierarchyData[key] = [];
-                }
-                if(key == zoom){
-                    self.mapHierarchyData[key] = self.basePolygons
-
-
-                }
-            }
-             */
+           
         },
         /**
          * 给地图显示层级赋值

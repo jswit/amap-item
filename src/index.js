@@ -1,6 +1,6 @@
 import Vue from 'vue';
-import BsComAMap from '@xinguang-data/bs-com-amap';
-Vue.use(BsComAMap);
+import bsComAMap from '@xinguang-data/bs-com-amap';
+Vue.use(bsComAMap);
 
 import bsAmap from './lib/components/bs-amap.vue';
 
