@@ -88,6 +88,7 @@
             <!-- 海量点 -->
             <amap-pointsimplifier
                 :pointData="pointDatas"
+                :autoSetFitView="pointAutoSetFitView"
                 @pointClick="pointClick"
                 @pointMouseover="pointMouseover"
             >
@@ -199,6 +200,14 @@ export default {
             }
         },
 
+        polygonSelect: {
+            type : Boolean,
+            required: false,
+            default: false
+        },
+
+
+
         textStyle : {
             type : Object,
             required: false,
@@ -213,6 +222,12 @@ export default {
             default: () => {
                 return [];
             }
+        },
+
+        pointAutoSetFitView: {
+            type : Boolean,
+            required : false,
+            default : false
         },
         
         satelliteIsShow: {
@@ -237,7 +252,7 @@ export default {
 
         // step 4 赋值多边形染色数据
         this.polygonDyeingArr = this.polygonDyeing;
-
+        
         this.textStyles = this.textStyle;
 
         // step 4 判断是否已经实例化地图，并赋值对应层级数据给变量
@@ -253,6 +268,17 @@ export default {
                 let self = this;
                 // step 1 给多边形数据赋新数据
                 self.polygonDatas = newValue;
+                // console.log(newValue);
+                
+                if( self.polygonDatas.length  === 0 ){
+                    // self.mapObj.clearMap();
+                    let polygons = this.$refs.map.$$getAllOverlays( 'polygon' );
+                    let texts = this.$refs.map.$$getAllOverlays( 'text' );
+                    polygons.forEach ( function ( polygon, key ) {
+                        self.mapObj.remove([polygon,texts[key]]);
+                    });
+                    return false;
+                }
 
                 if( !this.mapObj ){
                     return false;
@@ -262,7 +288,7 @@ export default {
                 let polygons = this.$refs.map.$$getAllOverlays( 'polygon' );
                 let texts = this.$refs.map.$$getAllOverlays( 'text' );
                 polygons.forEach ( function ( polygon, key ) {
-                    if(polygon.getExtData().parent_id != self.region_id){
+                    if( polygon.getExtData().parent_id != self.region_id ){
                         self.mapObj.remove([polygon,texts[key]]);
                     }
                 });
@@ -273,6 +299,10 @@ export default {
             },
 
             deep: true
+        },
+        polygonDyeing () {
+            let self = this;
+            self.polygonDyeingArr = self.polygonDyeing;
         },
 
         pointData(){
@@ -305,6 +335,13 @@ export default {
             this.config = mapConfig;
         },
 
+        checkPolygonSelectState () {
+            /* let self = this;
+            if( self.polygonSelect  === true ){
+                return false;
+            } */
+        },
+
         /**
          * 地图操作事件
          */
@@ -333,7 +370,11 @@ export default {
 
             // step 2 自适应层级显示最佳效果
             self.$refs.map.$$setFitView(polygon)            
-            
+
+            if( self.checkPolygonSelectState() === false) {
+                return false;
+            };
+
             // step 3 下钻 提交当前ID给父组件获取数据，监听并执行下钻
             let region_id = component.extData.region_id
             this.chooseRegion = region_id;
@@ -506,6 +547,11 @@ export default {
          */
         restorePolygon () {
             let self = this;
+            
+            if( self.checkPolygonSelectState() === false) {
+                return false;
+            };
+
             let zoom = self.mapObj.getZoom();
             let allPolygon = self.mapObj.getAllOverlays('polygon')
             let allText = self.mapObj.getAllOverlays('text')
