@@ -25,15 +25,15 @@
                 :path="polygon.coordinates"
                 :ref="`polygon_${polygon.region_id}`"
                 :extData="polygon"
-                :fillColor="polygonDyeingArr.hasOwnProperty(index) && typeof polygonDyeingArr[index].fillColor != `undefined` ? polygonDyeingArr[index].fillColor : polygonNormal.fillColor"
-                :fillOpacity="polygonDyeingArr.hasOwnProperty(index) && typeof polygonDyeingArr[index].fillOpacity != `undefined` ? polygonDyeingArr[index].fillOpacity : polygonNormal.fillOpacity"
-                :strokeColor="polygonDyeingArr.hasOwnProperty(index) && typeof polygonDyeingArr[index].strokeColor != `undefined` ? polygonDyeingArr[index].strokeColor : polygonNormal.strokeColor"
-                :strokeOpacity="polygonDyeingArr.hasOwnProperty(index) && typeof polygonDyeingArr[index].strokeOpacity != `undefined` ? polygonDyeingArr[index].strokeOpacity : polygonNormal.strokeOpacity"
-                :strokeWeight="polygonDyeingArr.hasOwnProperty(index) && typeof polygonDyeingArr[index].strokeWeight != `undefined` ? polygonDyeingArr[index].strokeWeight : polygonNormal.strokeWeight"
-                :strokeStyle="polygonDyeingArr.hasOwnProperty(index) && typeof polygonDyeingArr[index].strokeStyle != `undefined` ? polygonDyeingArr[index].strokeStyle : polygonNormal.strokeStyle"
-                :draggable="polygonDyeingArr.hasOwnProperty(index) && typeof polygonDyeingArr[index].draggable != `undefined` ? polygonDyeingArr[index].draggable : polygonNormal.draggable"
-                :bubble="polygonDyeingArr.hasOwnProperty(index) && typeof polygonDyeingArr[index].bubble != `undefined` ? polygonDyeingArr[index].bubble : polygonNormal.bubble"
-                :zIndex="polygonDyeingArr.hasOwnProperty(index) && typeof polygonDyeingArr[index].zIndex != `undefined` ? polygonDyeingArr[index].zIndex : polygonNormal.zIndex"
+                :fillColor="polygonDyeingArr.hasOwnProperty( polygon.region_id ) && typeof polygonDyeingArr[ polygon.region_id ].fillColor != `undefined` ? polygonDyeingArr[ polygon.region_id ].fillColor : polygonNormal.fillColor"
+                :fillOpacity="polygonDyeingArr.hasOwnProperty( polygon.region_id ) && typeof polygonDyeingArr[ polygon.region_id ].fillOpacity != `undefined` ? polygonDyeingArr[ polygon.region_id ].fillOpacity : polygonNormal.fillOpacity"
+                :strokeColor="polygonDyeingArr.hasOwnProperty( polygon.region_id ) && typeof polygonDyeingArr[polygon.region_id ].strokeColor != `undefined` ? polygonDyeingArr[ polygon.region_id ].strokeColor : polygonNormal.strokeColor"
+                :strokeOpacity="polygonDyeingArr.hasOwnProperty( polygon.region_id ) && typeof polygonDyeingArr[ polygon.region_id ].strokeOpacity != `undefined` ? polygonDyeingArr[ polygon.region_id ].strokeOpacity : polygonNormal.strokeOpacity"
+                :strokeWeight="polygonDyeingArr.hasOwnProperty( polygon.region_id ) && typeof polygonDyeingArr[ polygon.region_id ].strokeWeight != `undefined` ? polygonDyeingArr[ polygon.region_id ].strokeWeight : polygonNormal.strokeWeight"
+                :strokeStyle="polygonDyeingArr.hasOwnProperty( polygon.region_id ) && typeof polygonDyeingArr[ polygon.region_id ].strokeStyle != `undefined` ? polygonDyeingArr[ polygon.region_id ].strokeStyle : polygonNormal.strokeStyle"
+                :draggable="polygonDyeingArr.hasOwnProperty( polygon.region_id ) && typeof polygonDyeingArr[ polygon.region_id ].draggable != `undefined` ? polygonDyeingArr[ polygon.region_id ].draggable : polygonNormal.draggable"
+                :bubble="polygonDyeingArr.hasOwnProperty( polygon.region_id ) && typeof polygonDyeingArr[ polygon.region_id ].bubble != `undefined` ? polygonDyeingArr[ polygon.region_id ].bubble : polygonNormal.bubble"
+                :zIndex="polygonDyeingArr.hasOwnProperty( polygon.region_id ) && typeof polygonDyeingArr[ polygon.region_id ].zIndex != `undefined` ? polygonDyeingArr[ polygon.region_id ].zIndex : polygonNormal.zIndex"
                 
                 @click="polygonClick"
                 @mouseover="polygonMouseover"
@@ -41,7 +41,6 @@
                                 
             >
             </amap-polygon>
-            
             <!-- 纯文本标记 -->
             <amap-text
                 v-if="polygonDatas"
@@ -116,7 +115,7 @@ export default {
 
             // 多边形
             polygonDatas : [],      // 多边形数据
-            polygonDyeingArr : [],  // 地图多边形染色数据
+            polygonDyeingArr : {},  // 地图多边形染色数据
             childPolygonDatas : null,
 
             // 纯文本标记
@@ -193,10 +192,10 @@ export default {
         },
 
         polygonDyeing: {
-            type : Array,
+            type : Object,
             required: false,
             default: () => {
-                return [];
+                return {};
             }
         },
 
@@ -303,6 +302,12 @@ export default {
         polygonDyeing () {
             let self = this;
             self.polygonDyeingArr = self.polygonDyeing;
+
+            /* Object.keys( self.polygonDyeing) .forEach( function ( item ,key) {
+                // self.$refs['polygon_' + item][0].polygon.setOptions( self.polygonDyeing[item] );
+            }) */
+        },
+        polygonNormal ( newValue, oldValue) {
         },
 
         pointData(){
