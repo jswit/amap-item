@@ -48,7 +48,7 @@
                 :key="`text_${polygon.region_id}${index}`"
                 :ref="`text_${polygon.region_id}`"
 
-                :text="polygon.name"
+                :text="textNames.hasOwnProperty( polygon.region_id ) && typeof textNames[ polygon.region_id ] != `undefined` ? textNames[ polygon.region_id ] : polygon.name"
                 :position="polygon.center_point"
                 :extData="polygon"
                 
@@ -68,7 +68,7 @@
                 :shadow="textStyles.shadow"
                 :title="textStyles.title"
                 :clickable="textStyles.clickable"
-                :textStyle="textStyles.textStyle"
+                :textStyle="textStyles.style"
 
                 @click="textClick"
                 @dblclick="textDblclick"
@@ -119,7 +119,8 @@ export default {
             childPolygonDatas : null,
 
             // 纯文本标记
-            textStyles : [],        // 纯文本标签样式
+            textNames : {},
+            textStyles : {},        // 纯文本标签样式
             
             chooseRegion : null,
             mapHierarchyData : {},  // 地图zoom层级对应数据，用于上钻操作
@@ -214,6 +215,14 @@ export default {
                 return {};
             }
         },
+
+        textName : {
+            type : Object,
+            required: false,
+            default: () => {
+                return {};
+            }
+        },
         
         pointData: {
             type : Array,
@@ -253,6 +262,7 @@ export default {
         this.polygonDyeingArr = this.polygonDyeing;
         
         this.textStyles = this.textStyle;
+        this.textNames = this.textName;
 
         // step 4 判断是否已经实例化地图，并赋值对应层级数据给变量
         if(this.polygons && this.mapObj){
@@ -287,6 +297,8 @@ export default {
                 let polygons = this.$refs.map.$$getAllOverlays( 'polygon' );
                 let texts = this.$refs.map.$$getAllOverlays( 'text' );
                 polygons.forEach ( function ( polygon, key ) {
+                    // console.log( polygon.getExtData().name );
+                    polygon.setOptions(self.polygonNormal)
                     if( polygon.getExtData().parent_id != self.region_id ){
                         self.mapObj.remove([polygon,texts[key]]);
                     }
@@ -302,10 +314,10 @@ export default {
         polygonDyeing () {
             let self = this;
             self.polygonDyeingArr = self.polygonDyeing;
-
-            /* Object.keys( self.polygonDyeing) .forEach( function ( item ,key) {
-                // self.$refs['polygon_' + item][0].polygon.setOptions( self.polygonDyeing[item] );
-            }) */
+        },
+        textName () {
+            let self = this;
+            self.textNames = self.textName;
         },
         polygonNormal ( newValue, oldValue) {
         },
@@ -361,6 +373,7 @@ export default {
             if(zoom > this.config.zoom){
                 self.restorePolygon();
             }
+
         },
         
         /*
@@ -371,7 +384,7 @@ export default {
             let polygon = component.polygon;
 
             // step 1 提交自定义事件给父组件
-            self.$emit('polygonClick', component);
+            // self.$emit('polygonClick', component);
 
             // step 2 自适应层级显示最佳效果
             self.$refs.map.$$setFitView(polygon)            
@@ -383,8 +396,8 @@ export default {
             // step 3 下钻 提交当前ID给父组件获取数据，监听并执行下钻
             let region_id = component.extData.region_id
             this.chooseRegion = region_id;
-            self.$emit('getChildPolygon', region_id);
 
+            self.$emit('polygonClick', region_id);
 
             // 判断初始层级是否存在数据，如果尚未存在数据，则赋值
             if(typeof self.mapHierarchyData[self.config.zoom] == 'undefined'){
@@ -414,7 +427,8 @@ export default {
             let self = this;
             // step 1 提交自定义事件给父组件
             self.$emit('textClick', component);
-            let textMarker = component.textMarker;
+            
+            /* let textMarker = component.textMarker;
             let extData = textMarker.getExtData();
 
             let polygonComponent = self.$refs['polygon_'+extData.region_id][0];
@@ -424,13 +438,13 @@ export default {
             let allPolygon = self.mapObj.getAllOverlays('polygon')
             allPolygon.forEach( function( item, key ) {
                 if( item != polygon){
-                    if( self.polygonDyeingArr.hasOwnProperty( key ) && typeof self.polygonDyeingArr[ key ]){
-                        self.setPolygonStyle(item, self.polygonDyeingArr[ key ]);
+                    if( self.polygonDyeingArr.hasOwnProperty( item.getExtData().region_id ) && typeof self.polygonDyeingArr[ item.getExtData().region_id ]){
+                        self.setPolygonStyle(item, self.polygonDyeingArr[ item.getExtData().region_id ]);
                     }else{
                         self.setPolygonStyle(item, self.polygonNormal);
                     }
                 }
-            })
+            }) */
 
 
         },
@@ -550,7 +564,7 @@ export default {
         /**
          * 恢复多边形
          */
-        restorePolygon () {
+        async restorePolygon () {
             let self = this;
             
             if( self.checkPolygonSelectState() === false) {
@@ -569,8 +583,10 @@ export default {
              */
             if(zoom < self.lastZoom)
             {
+                // self.$emit( "zoomChange",  self.mapHierarchyData[zoom])
                 // 缩小
                 // step 1 移除大于当前层级的所有数据
+                let parent_region_id = "";
                 for( let key in self.mapHierarchyData) {
                     if(key > zoom){
                         self.mapHierarchyData[key].forEach( function( item, m ) {
@@ -579,6 +595,7 @@ export default {
                                 allPolygon.forEach( function( polygon, n ) {
                                     if( polygon.getExtData().region_id == item.region_id ){
                                         self.mapObj.remove([polygon,allText[n]]);
+                                        parent_region_id = polygon.getExtData().parent_id;
                                     }
                                 } )
                             }
@@ -587,30 +604,49 @@ export default {
                     }
                 }
 
+                self.$emit( "zoomChangeReduce",  parent_region_id);
+                
                 // step 2 将当前层级数据赋值给多边形组件
-                self.polygonDatas = self.mapHierarchyData[zoom];
-
+                function checkData( data, zoom ){
+                    for( ; zoom > 0; zoom-- ){
+                        if( typeof data[zoom] != 'undefined' && data[zoom].length != 0){
+                            return zoom;
+                        }
+                    }
+                }
+                let newZoom = await checkData(self.mapHierarchyData, zoom);
+                if( self.mapHierarchyData[newZoom].length == 0 ){
+                    return ;
+                }
+                self.polygonDatas = await self.mapHierarchyData[newZoom];
             }
             
             if( zoom == self.config.zoom ) {
                 let allPolygon = self.mapObj.getAllOverlays('polygon');
                 let allText = self.mapObj.getAllOverlays('text');
                 
+                if( allPolygon.length === self.basePolygons){
+                    return false;
+                }
+
                 if( typeof self.mapHierarchyData[zoom] == 'undefined'){
                     return
                 }
+                let parent_region_id = "";
                 self.mapHierarchyData[zoom].forEach( function ( item, key ) {
                     if( !self.basePolygons.includes( item )) {
                         allPolygon.forEach( function( polygon, n ) {
                             if( polygon.getExtData().region_id == item.region_id ){
                                 self.mapObj.remove([polygon,allText[n]]);
+                                parent_region_id = polygon.getExtData().parent_id;
                             }
                         } )
 
                     }
                 })
-                self.mapHierarchyData[zoom] = self.basePolygons;
-                self.polygonDatas = self.mapHierarchyData[zoom];
+                self.$emit( "zoomChangeReduce",  parent_region_id);
+
+                self.polygonDatas = self.mapHierarchyData[zoom] = self.basePolygons;
             }
            
         },
