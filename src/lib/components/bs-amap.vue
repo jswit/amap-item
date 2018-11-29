@@ -99,6 +99,15 @@
             >
             </amap-satellite>
 
+            <!-- 热力图 -->
+            <amap-heatmap
+                :heatmapData="heatmapData"
+                :radius="heatmapRadius"
+                :opacity="heatmapOpacity"
+                :gradient="heatmapGradient"
+                :max="heatmapMax"
+            >
+            </amap-heatmap>
 
             <slot></slot>
         </amap>
@@ -243,6 +252,31 @@ export default {
             required: false,
             default: false
         },
+
+        heatmapData : {
+            type : Array,
+            required : false,
+            default: ()=> {
+                return [];
+            }
+        },
+        heatmapRadius : {
+            type : Number,
+            required : false
+        },
+        heatmapOpacity : {
+            type : Array,
+            required : false
+        },
+        heatmapGradient : {
+            type : Object,
+            required : false
+        },
+        heatmapMax : {
+            type : Number,
+            required : false,
+        },
+
     },
     created(){
         this.initMapConfig();
