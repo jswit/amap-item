@@ -66,7 +66,7 @@
                 :angle="textStyles.angle"
                 :animation="textStyles.animation"
                 :shadow="textStyles.shadow"
-                :title="textStyles.title"
+                :title="textStyles.name"
                 :clickable="textStyles.clickable"
                 :textStyle="textStyles.style"
 
@@ -90,6 +90,7 @@
                 :autoSetFitView="pointAutoSetFitView"
                 @pointClick="pointClick"
                 @pointMouseover="pointMouseover"
+                @pointMouseout="pointMouseout"
             >
             </amap-pointsimplifier>
 
@@ -108,6 +109,24 @@
                 :max="heatmapMax"
             >
             </amap-heatmap>
+
+            <!-- 简单信息窗体 -->
+            <amap-simpleinfowindow
+                :isShow="simpleInfoWindowIsShow"
+                :infoTitle="simpleInfoWindowInfoTitle"
+                :infoBody="simpleInfoWindowInfoBody"
+                :infoTplData="simpleInfoWindowInfoTplData"
+                :position="simpleInfoWindowPosition"
+            >
+            </amap-simpleinfowindow>
+
+            <!-- 信息窗体 -->
+            <amap-infowindow
+                :isShow="infoWindowIsShow"
+                :content="infoWindowContent"
+                :position="infoWindowPosition"
+            >
+            </amap-infowindow>
 
             <slot></slot>
         </amap>
@@ -276,6 +295,44 @@ export default {
             type : Number,
             required : false,
         },
+
+        // 简单信息窗体
+        simpleInfoWindowIsShow : {
+            type : Boolean,
+            required : false,
+            default : false
+        },
+        simpleInfoWindowInfoTitle : {
+            type : String,
+            required : false,
+        },
+        simpleInfoWindowInfoBody : {
+            type : String,
+            required : false,
+        },
+        simpleInfoWindowInfoTplData : {
+            type : Object,
+            required : false,
+        },
+        simpleInfoWindowPosition : {
+            type : Array,
+            required : false
+        },
+
+        // 信息窗体
+        infoWindowContent : {
+            type : [ String, Object ],
+            required : false
+        },
+        infoWindowIsShow : {
+            type : Boolean,
+            required : false
+        },
+        infoWindowPosition : {
+            type : Array,
+            required : false
+        }
+
 
     },
     created(){
@@ -538,7 +595,10 @@ export default {
             
         },
         pointMouseover( value ) {
-
+            this.$emit('pointMouseover', value);
+        },
+        pointMouseout( value ) {
+            this.$emit('pointMouseout', value);
         },
 
         /**
