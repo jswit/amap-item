@@ -68,7 +68,7 @@ export default {
             polygonHover : {},
 
             polygonStore : {},  // 多边形数据存储
-            polygonDyeing : [], // 多边形染色数据
+            polygonDyeing : {}, // 多边形染色数据
 
             // 纯文本标注变量
             textStyle : {},
