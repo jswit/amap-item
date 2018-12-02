@@ -1,7 +1,7 @@
 {
   "name": "@xinguang-data/bs-amap",
   "description": "地图逻辑层开发",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "license": "MIT",
   "main": "./src/index.js",
   "private": false,
@@ -18,7 +18,7 @@
     "build": "vue-cli-service build"
   },
   "dependencies": {
-    "@xinguang-data/bs-com-amap": "^0.0.6",
+    "@xinguang-data/bs-com-amap": "^0.0.7",
     "@xinguang-data/bs-com-common": "^0.6.0",
     "axios": "^0.18.0",
     "less": "^3.8.1",
